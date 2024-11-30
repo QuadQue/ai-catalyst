@@ -19,10 +19,10 @@ export const routes: RouteGroup[] = [
     ]
   },
   {
-    name: 'AI Management',
+    name: 'AI Agent Management',
     routes: [
-      { name: 'AI Agents', path: '/agents', icon: Cpu },
       { name: 'Create Agent', path: '/create-agent', icon: PlusCircle },
+      { name: 'All Agents', path: '/agents', icon: Cpu },
       { name: 'Tasks', path: '/tasks', icon: Zap },
     ]
   },
