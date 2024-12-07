@@ -61,14 +61,44 @@ const FORM_STEPS: FormStep[] = [
   { title: "Security & Deployment", description: "Set up access controls" },
 ]
 
+const INTEGRATION_ICONS = {
+  slack: '/slack-icon.png',
+  discord: '/discord-icon.png'
+} as const;
+
 interface CustomIntegration {
-  name: string
-  description: string
-  type: 'api' | 'webhook' | 'custom'
-  icon: string
-  authType: 'apiKey' | 'oauth' | 'basic' | 'none'
-  endpoint: string
-  isEnabled: boolean
+  name: string;
+  description: string;
+  type: 'api' | 'webhook' | 'custom';
+  icon: string;
+  authType: 'apiKey' | 'oauth' | 'basic' | 'none';
+  endpoint: string;
+  isEnabled: boolean;
+  settings?: {
+    apiKey?: string;
+    webhookUrl?: string;
+    timeout?: number;
+    retryAttempts?: number;
+    showSettings?: boolean;
+  };
+}
+
+interface IntegrationConfig {
+  id: string;
+  name: string;
+  enabled: boolean;
+  isCustom?: boolean;
+  description?: string;
+  settings: {
+    apiKey?: string;
+    endpoint?: string;
+    webhookUrl?: string;
+    headers?: Record<string, string>;
+    authType: 'none' | 'apiKey' | 'oauth' | 'basic';
+    timeout: number;
+    retryAttempts: number;
+    showSettings: boolean;
+  };
 }
 
 export default function CreateAgentPage() {
@@ -124,8 +154,43 @@ export default function CreateAgentPage() {
     icon: '',
     authType: 'apiKey',
     endpoint: '',
-    isEnabled: true
+    isEnabled: true,
+    settings: {
+      apiKey: '',
+      webhookUrl: '',
+      timeout: 30000,
+      retryAttempts: 3,
+      showSettings: false
+    }
   })
+  const [integrations, setIntegrations] = useState<IntegrationConfig[]>([
+    {
+      id: 'slack',
+      name: 'Slack',
+      enabled: false,
+      settings: {
+        apiKey: '',
+        webhookUrl: '',
+        authType: 'apiKey',
+        timeout: 30000,
+        retryAttempts: 3,
+        showSettings: false
+      }
+    },
+    {
+      id: 'discord',
+      name: 'Discord',
+      enabled: false,
+      settings: {
+        apiKey: '',
+        webhookUrl: '',
+        authType: 'oauth',
+        timeout: 30000,
+        retryAttempts: 3,
+        showSettings: false
+      }
+    }
+  ]);
 
   const handleNext = () => {
     if (currentStep < FORM_STEPS.length - 1) {
@@ -778,327 +843,257 @@ export default function CreateAgentPage() {
                   <div className="space-y-4">
                     <h3 className="text-sm font-medium text-muted-foreground">API INTEGRATIONS</h3>
                     
-                    <div className="grid gap-4">
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <img src="/slack-icon.png" alt="Slack" className="w-8 h-8" />
-                          <div>
-                            <h4 className="font-medium">Slack</h4>
-                            <p className="text-sm text-muted-foreground">Chat & Notifications</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Switch />
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm">Configure</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem>
-                                <Settings className="mr-2 h-4 w-4" />
-                                General Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Key className="mr-2 h-4 w-4" />
-                                API Keys
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Webhook className="mr-2 h-4 w-4" />
-                                Webhooks
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <BarChart3 className="mr-2 h-4 w-4" />
-                                View Usage
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <img src="/discord-icon.png" alt="Discord" className="w-8 h-8" />
-                          <div>
-                            <h4 className="font-medium">Discord</h4>
-                            <p className="text-sm text-muted-foreground">Community Integration</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Switch />
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm">Configure</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem>
-                                <Settings className="mr-2 h-4 w-4" />
-                                General Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Bot className="mr-2 h-4 w-4" />
-                                Bot Configuration
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Server className="mr-2 h-4 w-4" />
-                                Server Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <BarChart3 className="mr-2 h-4 w-4" />
-                                View Usage
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <img src="/gcal-icon.png" alt="Google Calendar" className="w-8 h-8" />
-                          <div>
-                            <h4 className="font-medium">Google Calendar</h4>
-                            <p className="text-sm text-muted-foreground">Schedule Management</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Switch />
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm">Configure</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem>
-                                <Settings className="mr-2 h-4 w-4" />
-                                General Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Calendar className="mr-2 h-4 w-4" />
-                                Calendar Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Key className="mr-2 h-4 w-4" />
-                                OAuth Setup
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <BarChart3 className="mr-2 h-4 w-4" />
-                                View Usage
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <img src="/github-icon.png" alt="GitHub" className="w-8 h-8" />
-                          <div>
-                            <h4 className="font-medium">GitHub</h4>
-                            <p className="text-sm text-muted-foreground">Repository Management</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Switch />
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm">Configure</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem>
-                                <Settings className="mr-2 h-4 w-4" />
-                                General Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <GitFork className="mr-2 h-4 w-4" />
-                                Repository Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Key className="mr-2 h-4 w-4" />
-                                Access Tokens
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <BarChart3 className="mr-2 h-4 w-4" />
-                                View Usage
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Dialog open={isAddingIntegration} onOpenChange={setIsAddingIntegration}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="w-full">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Custom Integration
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[525px]">
-                        <DialogHeader>
-                          <DialogTitle>Add Custom Integration</DialogTitle>
-                          <DialogDescription>
-                            Configure a new integration for your AI agent. Fill in the details below to set up the connection.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                          <div className="grid gap-2">
-                            <Label htmlFor="integration-name">Integration Name</Label>
-                            <Input
-                              id="integration-name"
-                              placeholder="e.g., My Custom API"
-                              value={newIntegration.name}
-                              onChange={(e) => setNewIntegration({ ...newIntegration, name: e.target.value })}
-                            />
-                          </div>
-                          
-                          <div className="grid gap-2">
-                            <Label htmlFor="integration-description">Description</Label>
-                            <Textarea
-                              id="integration-description"
-                              placeholder="Describe what this integration does..."
-                              value={newIntegration.description}
-                              onChange={(e) => setNewIntegration({ ...newIntegration, description: e.target.value })}
-                            />
-                          </div>
-
-                          <div className="grid gap-2">
-                            <Label>Integration Type</Label>
-                            <RadioGroup
-                              value={newIntegration.type}
-                              onValueChange={(value: 'api' | 'webhook' | 'custom') => 
-                                setNewIntegration({ ...newIntegration, type: value })}
-                              className="grid grid-cols-3 gap-4"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="api" id="api" />
-                                <Label htmlFor="api">REST API</Label>
+                    {[...integrations, ...customIntegrations.map(custom => ({
+                      id: custom.name.toLowerCase().replace(/\s+/g, '-'),
+                      name: custom.name,
+                      enabled: custom.isEnabled,
+                      isCustom: true,
+                      description: custom.description,
+                      settings: {
+                        apiKey: custom.settings?.apiKey || '',
+                        webhookUrl: custom.settings?.webhookUrl || '',
+                        authType: custom.authType,
+                        timeout: custom.settings?.timeout || 30000,
+                        retryAttempts: custom.settings?.retryAttempts || 3,
+                        showSettings: custom.settings?.showSettings || false,
+                        endpoint: custom.endpoint
+                      }
+                    }))].map((integration, index) => (
+                      <Card key={integration.id} className="border shadow-sm">
+                        <CardHeader className="pb-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                                {integration.isCustom ? (
+                                  <Settings className="w-6 h-6 text-primary" />
+                                ) : (
+                                  <img 
+                                    src={INTEGRATION_ICONS[integration.id as keyof typeof INTEGRATION_ICONS] || '/default-integration-icon.png'}
+                                    alt={integration.name}
+                                    className="w-6 h-6"
+                                    onError={(e) => {
+                                      e.currentTarget.src = '/default-integration-icon.png';
+                                    }}
+                                  />
+                                )}
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="webhook" id="webhook" />
-                                <Label htmlFor="webhook">Webhook</Label>
+                              <div>
+                                <CardTitle className="text-lg">{integration.name}</CardTitle>
+                                <CardDescription>
+                                  {integration.description || "Configure integration settings"}
+                                </CardDescription>
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="custom" id="custom" />
-                                <Label htmlFor="custom">Custom</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                checked={integration.enabled}
+                                onCheckedChange={(checked) => {
+                                  if (index < integrations.length) {
+                                    const updatedIntegrations = [...integrations];
+                                    updatedIntegrations[index].enabled = checked;
+                                    setIntegrations(updatedIntegrations);
+                                  } else {
+                                    const customIndex = index - integrations.length;
+                                    const updatedCustom = [...customIntegrations];
+                                    updatedCustom[customIndex].isEnabled = checked;
+                                    setCustomIntegrations(updatedCustom);
+                                  }
+                                }}
+                              />
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  const updatedSettings = !integration.settings.showSettings;
+                                  if (index < integrations.length) {
+                                    const updatedIntegrations = [...integrations];
+                                    updatedIntegrations[index].settings.showSettings = updatedSettings;
+                                    setIntegrations(updatedIntegrations);
+                                  } else {
+                                    const customIndex = index - integrations.length;
+                                    const updatedCustom = [...customIntegrations];
+                                    if (!updatedCustom[customIndex].settings) {
+                                      updatedCustom[customIndex].settings = {
+                                        showSettings: updatedSettings,
+                                        timeout: 30000,
+                                        retryAttempts: 3
+                                      };
+                                    } else {
+                                      updatedCustom[customIndex].settings.showSettings = updatedSettings;
+                                    }
+                                    setCustomIntegrations(updatedCustom);
+                                  }
+                                }}
+                              >
+                                <Settings className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        
+                        {integration.settings.showSettings && (
+                          <CardContent className="space-y-4">
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <div className="space-y-2">
+                                <Label>Authentication Type</Label>
+                                <Select
+                                  value={integration.settings.authType}
+                                  onValueChange={(value: 'none' | 'apiKey' | 'oauth' | 'basic') => {
+                                    if (index < integrations.length) {
+                                      // Handle default integrations
+                                      const updatedIntegrations = [...integrations];
+                                      updatedIntegrations[index].settings.authType = value;
+                                      setIntegrations(updatedIntegrations);
+                                    } else {
+                                      // Handle custom integrations
+                                      const customIndex = index - integrations.length;
+                                      const updatedCustom = [...customIntegrations];
+                                      updatedCustom[customIndex] = {
+                                        ...updatedCustom[customIndex],
+                                        authType: value
+                                      };
+                                      setCustomIntegrations(updatedCustom);
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select auth type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">No Authentication</SelectItem>
+                                    <SelectItem value="apiKey">API Key</SelectItem>
+                                    <SelectItem value="oauth">OAuth 2.0</SelectItem>
+                                    <SelectItem value="basic">Basic Auth</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
-                            </RadioGroup>
-                          </div>
 
-                          <div className="grid gap-2">
-                            <Label>Authentication Type</Label>
-                            <Select 
-                              value={newIntegration.authType}
-                              onValueChange={(value: 'apiKey' | 'oauth' | 'basic' | 'none') => 
-                                setNewIntegration({ ...newIntegration, authType: value })}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select authentication type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="apiKey">API Key</SelectItem>
-                                <SelectItem value="oauth">OAuth 2.0</SelectItem>
-                                <SelectItem value="basic">Basic Auth</SelectItem>
-                                <SelectItem value="none">No Auth</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                              {integration.settings.authType === 'apiKey' && (
+                                <div className="space-y-2">
+                                  <Label>API Key</Label>
+                                  <Input
+                                    type="password"
+                                    value={integration.settings.apiKey}
+                                    onChange={(e) => {
+                                      if (index < integrations.length) {
+                                        const updatedIntegrations = [...integrations];
+                                        updatedIntegrations[index].settings.apiKey = e.target.value;
+                                        setIntegrations(updatedIntegrations);
+                                      } else {
+                                        const customIndex = index - integrations.length;
+                                        const updatedCustom = [...customIntegrations];
+                                        updatedCustom[customIndex] = {
+                                          ...updatedCustom[customIndex],
+                                          settings: {
+                                            ...updatedCustom[customIndex].settings,
+                                            apiKey: e.target.value
+                                          }
+                                        };
+                                        setCustomIntegrations(updatedCustom);
+                                      }
+                                    }}
+                                    placeholder="Enter API key"
+                                  />
+                                </div>
+                              )}
 
-                          <div className="grid gap-2">
-                            <Label htmlFor="endpoint">Endpoint URL</Label>
-                            <Input
-                              id="endpoint"
-                              type="url"
-                              placeholder="https://api.example.com/v1"
-                              value={newIntegration.endpoint}
-                              onChange={(e) => setNewIntegration({ ...newIntegration, endpoint: e.target.value })}
-                            />
-                          </div>
+                              <div className="space-y-2">
+                                <Label>Webhook URL</Label>
+                                <Input
+                                  type="url"
+                                  value={integration.settings.webhookUrl}
+                                  onChange={(e) => {
+                                    if (index < integrations.length) {
+                                      const updatedIntegrations = [...integrations];
+                                      updatedIntegrations[index].settings.webhookUrl = e.target.value;
+                                      setIntegrations(updatedIntegrations);
+                                    } else {
+                                      const customIndex = index - integrations.length;
+                                      const updatedCustom = [...customIntegrations];
+                                      updatedCustom[customIndex] = {
+                                        ...updatedCustom[customIndex],
+                                        settings: {
+                                          ...updatedCustom[customIndex].settings,
+                                          webhookUrl: e.target.value
+                                        }
+                                      };
+                                      setCustomIntegrations(updatedCustom);
+                                    }
+                                  }}
+                                  placeholder="https://example.com/webhook"
+                                />
+                              </div>
 
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              id="integration-status"
-                              checked={newIntegration.isEnabled}
-                              onCheckedChange={(checked) => setNewIntegration({ ...newIntegration, isEnabled: checked })}
-                            />
-                            <Label htmlFor="integration-status">Enable Integration</Label>
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setIsAddingIntegration(false)
-                              setNewIntegration({
-                                name: '',
-                                description: '',
-                                type: 'api',
-                                icon: '',
-                                authType: 'apiKey',
-                                endpoint: '',
-                                isEnabled: true
-                              })
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setCustomIntegrations([...customIntegrations, newIntegration])
-                              setIsAddingIntegration(false)
-                              setNewIntegration({
-                                name: '',
-                                description: '',
-                                type: 'api',
-                                icon: '',
-                                authType: 'apiKey',
-                                endpoint: '',
-                                isEnabled: true
-                              })
-                            }}
-                          >
-                            Add Integration
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                              <div className="space-y-2">
+                                <Label>Timeout (ms)</Label>
+                                <Input
+                                  type="number"
+                                  value={integration.settings.timeout}
+                                  onChange={(e) => {
+                                    if (index < integrations.length) {
+                                      const updatedIntegrations = [...integrations];
+                                      updatedIntegrations[index].settings.timeout = parseInt(e.target.value);
+                                      setIntegrations(updatedIntegrations);
+                                    } else {
+                                      const customIndex = index - integrations.length;
+                                      const updatedCustom = [...customIntegrations];
+                                      updatedCustom[customIndex] = {
+                                        ...updatedCustom[customIndex],
+                                        settings: {
+                                          ...updatedCustom[customIndex].settings,
+                                          timeout: parseInt(e.target.value)
+                                        }
+                                      };
+                                      setCustomIntegrations(updatedCustom);
+                                    }
+                                  }}
+                                  min={1000}
+                                  max={60000}
+                                  step={1000}
+                                />
+                              </div>
 
-                    {customIntegrations.map((integration, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                            <Settings className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{integration.name}</h4>
-                            <p className="text-sm text-muted-foreground">{integration.description}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Switch checked={integration.isEnabled} />
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm">Configure</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem>
-                                <Settings className="mr-2 h-4 w-4" />
-                                General Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Key className="mr-2 h-4 w-4" />
-                                Authentication
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Link2 className="mr-2 h-4 w-4" />
-                                Endpoint Config
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <BarChart3 className="mr-2 h-4 w-4" />
-                                View Usage
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
+                              <div className="space-y-2">
+                                <Label>Retry Attempts</Label>
+                                <Input
+                                  type="number"
+                                  value={integration.settings.retryAttempts}
+                                  onChange={(e) => {
+                                    if (index < integrations.length) {
+                                      const updatedIntegrations = [...integrations];
+                                      updatedIntegrations[index].settings.retryAttempts = parseInt(e.target.value);
+                                      setIntegrations(updatedIntegrations);
+                                    } else {
+                                      const customIndex = index - integrations.length;
+                                      const updatedCustom = [...customIntegrations];
+                                      updatedCustom[customIndex] = {
+                                        ...updatedCustom[customIndex],
+                                        settings: {
+                                          ...updatedCustom[customIndex].settings,
+                                          retryAttempts: parseInt(e.target.value)
+                                        }
+                                      };
+                                      setCustomIntegrations(updatedCustom);
+                                    }
+                                  }}
+                                  min={0}
+                                  max={10}
+                                />
+                              </div>
+                            </div>
+                          </CardContent>
+                        )}
+                      </Card>
                     ))}
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setIsAddingIntegration(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Custom Integration
+                    </Button>
                   </div>
                 </div>
               )}
@@ -1194,6 +1189,150 @@ export default function CreateAgentPage() {
           </Card>
         </form>
       </div>
+
+      <Dialog open={isAddingIntegration} onOpenChange={setIsAddingIntegration}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Add Custom Integration</DialogTitle>
+            <DialogDescription>
+              Configure a new integration for your AI agent. Fill in the details below to set up the connection.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="integration-name">Integration Name</Label>
+              <Input
+                id="integration-name"
+                placeholder="e.g., My Custom API"
+                value={newIntegration.name}
+                onChange={(e) => setNewIntegration({ ...newIntegration, name: e.target.value })}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="integration-description">Description</Label>
+              <Textarea
+                id="integration-description"
+                placeholder="Describe what this integration does..."
+                value={newIntegration.description}
+                onChange={(e) => setNewIntegration({ ...newIntegration, description: e.target.value })}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Integration Type</Label>
+              <RadioGroup
+                value={newIntegration.type}
+                onValueChange={(value: 'api' | 'webhook' | 'custom') => 
+                  setNewIntegration({ ...newIntegration, type: value })}
+                className="grid grid-cols-3 gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="api" id="api" />
+                  <Label htmlFor="api">REST API</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="webhook" id="webhook" />
+                  <Label htmlFor="webhook">Webhook</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="custom" id="custom" />
+                  <Label htmlFor="custom">Custom</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Authentication Type</Label>
+              <Select 
+                value={newIntegration.authType}
+                onValueChange={(value: 'apiKey' | 'oauth' | 'basic' | 'none') => 
+                  setNewIntegration({ ...newIntegration, authType: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select authentication type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="apiKey">API Key</SelectItem>
+                  <SelectItem value="oauth">OAuth 2.0</SelectItem>
+                  <SelectItem value="basic">Basic Auth</SelectItem>
+                  <SelectItem value="none">No Auth</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="endpoint">Endpoint URL</Label>
+              <Input
+                id="endpoint"
+                type="url"
+                placeholder="https://api.example.com/v1"
+                value={newIntegration.endpoint}
+                onChange={(e) => setNewIntegration({ ...newIntegration, endpoint: e.target.value })}
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="integration-status"
+                checked={newIntegration.isEnabled}
+                onCheckedChange={(checked) => setNewIntegration({ ...newIntegration, isEnabled: checked })}
+              />
+              <Label htmlFor="integration-status">Enable Integration</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddingIntegration(false)
+                setNewIntegration({
+                  name: '',
+                  description: '',
+                  type: 'api',
+                  icon: '',
+                  authType: 'apiKey',
+                  endpoint: '',
+                  isEnabled: true,
+                  settings: {
+                    apiKey: '',
+                    webhookUrl: '',
+                    timeout: 30000,
+                    retryAttempts: 3,
+                    showSettings: false
+                  }
+                })
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setCustomIntegrations([...customIntegrations, newIntegration])
+                setIsAddingIntegration(false)
+                setNewIntegration({
+                  name: '',
+                  description: '',
+                  type: 'api',
+                  icon: '',
+                  authType: 'apiKey',
+                  endpoint: '',
+                  isEnabled: true,
+                  settings: {
+                    apiKey: '',
+                    webhookUrl: '',
+                    timeout: 30000,
+                    retryAttempts: 3,
+                    showSettings: false
+                  }
+                })
+              }}
+            >
+              Add Integration
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
