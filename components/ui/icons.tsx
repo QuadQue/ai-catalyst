@@ -1,9 +1,33 @@
-import { Loader2, Upload, File, Trash } from "lucide-react"
-import { LucideIcon } from "lucide-react"
+import {
+  Loader2,
+  Upload,
+  File,
+  Trash,
+  Settings,
+  Puzzle,
+  Shield,
+  Plus,
+  Slack,
+  Calendar,
+  Database,
+  CreditCard,
+  Github,
+  Headphones,
+} from "lucide-react"
 
 export const Icons = {
   spinner: Loader2,
   upload: Upload,
   file: File,
-  trash: Trash
-} as const 
+  trash: Trash,
+  settings: Settings,
+  puzzle: Puzzle,
+  shield: Shield,
+  plus: Plus,
+  slack: Slack,
+  calendar: Calendar,
+  database: Database,
+  creditCard: CreditCard,
+  github: Github,
+  headset: Headphones,
+} as const
